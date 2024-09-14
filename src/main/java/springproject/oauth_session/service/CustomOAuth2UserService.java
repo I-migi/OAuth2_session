@@ -10,9 +10,18 @@ import springproject.oauth_session.dto.CustomOAuth2User;
 import springproject.oauth_session.dto.GoogleResponse;
 import springproject.oauth_session.dto.NaverResponse;
 import springproject.oauth_session.dto.OAuth2Response;
+import springproject.oauth_session.entity.UserEntity;
+import springproject.oauth_session.repository.UserRepository;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+
+	private final UserRepository userRepository;
+
+	public CustomOAuth2UserService(UserRepository userRepository) {
+		this.userRepository = userRepository;
+	}
+
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
@@ -37,7 +46,28 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		else {
 			return null;
 		}
-		String role = "ROLE_USER";
+
+		String username = oAuth2Response.getProvider() + " " + oAuth2Response.getProviderId();
+
+		UserEntity existData = userRepository.findByUsername(username);
+
+		String role = null;
+
+		if (existData == null) {
+			UserEntity userEntity = new UserEntity();
+
+			userEntity.setUsername(username);
+			userEntity.setEmail(oAuth2Response.getEmail());
+			userEntity.setRole("ROLE_USER");
+			userRepository.save(userEntity);
+		} else {
+
+			existData.setUsername(username);
+			existData.setEmail(oAuth2Response.getEmail());
+
+			role = existData.getRole();
+			userRepository.save(existData);
+		}
 
 		return  new CustomOAuth2User(oAuth2Response, role);
 

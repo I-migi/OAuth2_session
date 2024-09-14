@@ -22,7 +22,7 @@ public class GoogleResponse implements OAuth2Response {
 
 	@Override
 	public String getProviderId() {
-		return attributes.get("provider_id").toString();
+		return attributes.get("sub").toString();
 	}
 
 	@Override
